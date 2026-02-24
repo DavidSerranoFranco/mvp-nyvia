@@ -196,7 +196,7 @@ st.markdown("""
     
     Presentado y desarrollado por: **David Serrano Franco**
     
-    Email: david09115678@gmail.com | GitHub: 
+    Email: david09115678@gmail.com | GitHub: https://github.com/DavidSerranoFranco/mvp-nyvia
     
     *En producción se conectaría a los datos reales del ERP del Retail.*
     """)

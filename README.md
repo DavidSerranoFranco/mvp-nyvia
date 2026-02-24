@@ -1,4 +1,4 @@
-# 📦 Nyvia 2026 - Motor de Pronóstico de Demanda
+# Nyvia 2026 - Motor de Pronóstico de Demanda
 
 **Reto Analista de Datos | Propuesta de Optimización de Inventario para Retail**
 
@@ -68,5 +68,5 @@ Demuestra la viabilidad de implementar un **Motor de Pronóstico de Demanda** pa
 
 1. **Clonar el repositorio:**
    ```bash
-   git clone https://github.com/tu-usuario/nyvia-mvp-2026.git
+   git clone https://github.com/DavidSerranoFranco/mvp-nyvia.git
    cd nyvia-mvp-2026

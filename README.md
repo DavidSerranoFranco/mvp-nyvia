@@ -46,7 +46,7 @@ Demuestra la viabilidad de implementar un **Motor de Pronóstico de Demanda** pa
 
 ---
 
-## 🛠 Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 | **Tecnología** | **Propósito** |
 | :--- | :--- |

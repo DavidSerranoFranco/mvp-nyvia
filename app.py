@@ -69,11 +69,29 @@ st.info("""
     """)
 
 # Procesamiento de los datos
-# Aqui convierto fecha a datetime
-df_raw["invoice_date"] = pd.to_datetime(df_raw["invoice_date"], errors="coerce")
+# Guarda el total original antes de procesar
+filas_originales = len(df_raw)
+
+# Convierte fecha a datetime especificando formato DD/MM/YYYY porque antes de entregar este reto o proyecto, por el tipo de fecha que se encuentra en un mal formato o layout, pandas descarta el 69% de todos loa registros del dataset que descargue.
+df_raw["invoice_date"] = pd.to_datetime(
+    df_raw["invoice_date"], 
+    # aqui estaba el error que comentaba anteriormente, esto es importante para formato europeo/turco
+    dayfirst=True,
+    errors="coerce"
+)
+
+# Verifica cauntas filas se perdieron
+filas_perdidas = filas_originales - len(df_raw[df_raw["invoice_date"].notna()])
+
+# aqui muestro una advertencia para ver si se perdieron muchas filas
+# si pierde mas del 10%
+if filas_perdidas > filas_originales * 0.1:
+    st.warning(f"Se perdieron {filas_perdidas:,} filas por fechas inválidas ({filas_perdidas/filas_originales*100:.1f}%)")
+
+# elimina solo las filas con fechas inválidas
 df_raw = df_raw.dropna(subset=["invoice_date"])
 
-# Calcular ventas totales por transaccion
+# calcular ventas totales por transacción
 df_raw["ventas_totales"] = df_raw["quantity"] * df_raw["price"]
 
 # SIDEBAR - Filtros
@@ -130,7 +148,7 @@ st.subheader("Pronóstico de Demanda - Próximas 4 Semanas")
 df["mes"] = df["invoice_date"].dt.to_period("M").astype(str)
 ventas_mensuales = df.groupby("mes")["ventas_totales"].sum().reset_index()
 
-# Pronóstico simple - promedio movil 3 meses
+# Pronóstico simple - promedio móvil 3 meses
 ventas_mensuales["pronostico"] = ventas_mensuales["ventas_totales"].rolling(window=3).mean()
 ventas_mensuales["pronostico"] = ventas_mensuales["pronostico"].fillna(ventas_mensuales["ventas_totales"].mean())
 
@@ -196,7 +214,7 @@ st.markdown("""
     
     Presentado y desarrollado por: **David Serrano Franco**
     
-    Email: david09115678@gmail.com | GitHub: https://github.com/DavidSerranoFranco/mvp-nyvia
+    Email: david09115678@gmail.com | GitHub: 
     
     *En producción se conectaría a los datos reales del ERP del Retail.*
     """)

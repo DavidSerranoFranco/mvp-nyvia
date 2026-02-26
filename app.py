@@ -46,14 +46,14 @@ else:
         datos = {
             "invoice_no": [f"I{str(i).zfill(6)}" for i in range(1, n_registros+1)],
             "customer_id": [f"C{str(np.random.randint(100000, 999999)).zfill(6)}" for _ in range(n_registros)],
-            "gender": np.random.choice(["Female", "Male"], n_registros),
+            "gender": np.random.choice(["Femenino", "Masculino"], n_registros),
             "age": np.random.randint(18, 65, n_registros),
-            "category": np.random.choice(["Clothing", "Shoes", "Electronics", "Home"], n_registros),
+            "category": np.random.choice(["Ropa", "Zapatos", "Electronicos", "Hogar"], n_registros),
             "quantity": np.random.randint(1, 10, n_registros),
             "price": np.random.randint(500, 5000, n_registros),
-            "payment_method": np.random.choice(["Credit Card", "Debit Card", "Cash"], n_registros),
+            "payment_method": np.random.choice(["Tarjeta de Credito", "Tarjeta de Debito", "Efectivo"], n_registros),
             "invoice_date": np.random.choice(fechas, n_registros),
-            "shopping_mall": np.random.choice(["Kanyon", "Forum Ist", "Cevahir", "Zorlu"], n_registros)
+            "shopping_mall": np.random.choice(["Norte", "Sur", "Este", "Oeste"], n_registros)
         }
         return pd.DataFrame(datos)
     
@@ -214,7 +214,7 @@ st.markdown("""
     
     Presentado y desarrollado por: **David Serrano Franco**
     
-    Email: david09115678@gmail.com | GitHub: 
+    Email: david09115678@gmail.com | GitHub: https://github.com/DavidSerranoFranco/mvp-nyvia
     
     *En producción se conectaría a los datos reales del ERP del Retail.*
     """)

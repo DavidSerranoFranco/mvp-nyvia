@@ -7,19 +7,20 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import plotly.express as px
+import plotly.graph_objects as go
 
-# Configuracion de la página
+# configuracion de la pagina
 st.set_page_config(
     page_title="Nyvia - Pronóstico de Demanda",
     layout="wide"
 )
 
-# Titulo y descipcion
+# titulo y descipcion
 st.title("Nyvia - Motor de Pronóstico de Demanda")
 st.markdown("Optimizacion de Inventario para Productos Curva A")
 st.markdown("---")
 
-# Carga de los datos (Dataset o un demo)
+# carga de los datos (Dataset o un demo)
 st.sidebar.header("Fuente de datos")
 
 opcion = st.sidebar.radio(
@@ -36,12 +37,12 @@ if opcion == "Subir CSV Kaggle":
         st.sidebar.warning("Sube algun archivo CSV para continuar")
         st.stop()
 else:
-    # Puse datos simulados como un fallback, para evitar errores
+    # puse datos simulados como un fallback, para evitar errores
     @st.cache_data
     def generar_datos_simulados():
         np.random.seed(42)
         n_registros = 5000
-        fechas = pd.date_range(start="2024-01-01", end="2025-12-31", freq="D")
+        fechas = pd.date_range(start="2025-01-01", end="2025-12-31", freq="D")
         
         datos = {
             "invoice_no": [f"I{str(i).zfill(6)}" for i in range(1, n_registros+1)],
@@ -60,7 +61,7 @@ else:
     df_raw = generar_datos_simulados()
     st.sidebar.info("Uso de datos simulados para test")
 
-# Nota importante
+# nota importante
 st.info("""
     **Nota:** 
     Este prototipo utiliza datos de demostración para mostrar la capacidad de ejecucion. 
@@ -68,11 +69,11 @@ st.info("""
     inventario actual, etc). Mi intencion aqui es demostrar la **capacidad de ejecucion** de la propuesta.
     """)
 
-# Procesamiento de los datos
-# Guarda el total original antes de procesar
+# procesamiento de los datos
+# guarda el total original antes de procesar
 filas_originales = len(df_raw)
 
-# Convierte fecha a datetime especificando formato DD/MM/YYYY porque antes de entregar este reto o proyecto, por el tipo de fecha que se encuentra en un mal formato o layout, pandas descarta el 69% de todos loa registros del dataset que descargue.
+# convierte fecha a datetime especificando formato DD/MM/YYYY porque antes de entregar este reto o proyecto, por el tipo de fecha que se encuentra en un mal formato o layout, pandas descarta el 69% de todos loa registros del dataset que descargue.
 df_raw["invoice_date"] = pd.to_datetime(
     df_raw["invoice_date"], 
     # aqui estaba el error que comentaba anteriormente, esto es importante para formato europeo/turco
@@ -80,7 +81,7 @@ df_raw["invoice_date"] = pd.to_datetime(
     errors="coerce"
 )
 
-# Verifica cauntas filas se perdieron
+# verifica cauntas filas se perdieron
 filas_perdidas = filas_originales - len(df_raw[df_raw["invoice_date"].notna()])
 
 # aqui muestro una advertencia para ver si se perdieron muchas filas
@@ -94,7 +95,7 @@ df_raw = df_raw.dropna(subset=["invoice_date"])
 # calcular ventas totales por transacción
 df_raw["ventas_totales"] = df_raw["quantity"] * df_raw["price"]
 
-# SIDEBAR - Filtros
+# SIDEBAR - filtros
 st.sidebar.markdown("---")
 st.sidebar.header("Filtros")
 
@@ -108,7 +109,7 @@ mall_seleccionado = st.sidebar.selectbox(
     options=["Todos"] + sorted(df_raw["shopping_mall"].unique().tolist())
 )
 
-# Filtrar los datos
+# filtrar los datos
 df = df_raw.copy()
 if categoria_seleccionada != "Todas":
     df = df[df["category"] == categoria_seleccionada]
@@ -125,8 +126,8 @@ transacciones = len(df)
 ticket_promedio = df["ventas_totales"].mean()
 cantidad_total = df["quantity"].sum()
 
-# Proyecciones de impacto
-# 10% mejora en rotación
+# proyecciones de impacto
+# 10% mejora en rotacion
 ahorro_potencial = ventas_totales * 0.10
 # 2% ventas por quiebres recuperadas
 ventas_recuperadas = ventas_totales * 0.02 
@@ -139,63 +140,152 @@ col4.metric("Ventas a recuperar (2%)", f"${ventas_recuperadas:,.2f}", delta="�
 
 st.markdown("---")
 
+# grafico de proyeccion 2026
+st.subheader("📈 Proyección de Ventas 2026")
 
+st.info("""
+    **📌 Metodología:**
+    Proyección basada en histórico de ventas + impacto esperado de la iniciativa ($22.5M MXN).
+    """)
 
-#  Gráfico de pronóstico
-st.subheader("Pronóstico de Demanda - Próximas 4 Semanas")
+# agrupar ventas por mes
+df["mes_num"] = df["invoice_date"].dt.month
 
-# Agrupar ventas por mes
-df["mes"] = df["invoice_date"].dt.to_period("M").astype(str)
-ventas_mensuales = df.groupby("mes")["ventas_totales"].sum().reset_index()
+# mapeo de meses
+meses_espanol = {
+    1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
+    7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+}
+df["mes_nombre"] = df["mes_num"].map(meses_espanol)
 
-# Pronóstico simple - promedio móvil 3 meses
-ventas_mensuales["pronostico"] = ventas_mensuales["ventas_totales"].rolling(window=3).mean()
-ventas_mensuales["pronostico"] = ventas_mensuales["pronostico"].fillna(ventas_mensuales["ventas_totales"].mean())
+# agregar ventas por mes
+ventas_mensuales = df.groupby("mes_num").agg({
+    "ventas_totales": "sum",
+    "mes_nombre": "first"
+}).reset_index()
 
-# Crear gráfico
+# ordenar por número de mes
+ventas_mensuales = ventas_mensuales.sort_values("mes_num")
+
+# asignar nombre de mes
+ventas_mensuales["mes"] = ventas_mensuales["mes_num"].map(meses_espanol)
+
+# calcular promedio mensual historico
+promedio_mensual = ventas_mensuales["ventas_totales"].mean()
+
+# impacto mensual $22.5M anuales / 12 meses
+impacto_mensual = 22500000 / 12
+
+# crear proyeccion 2026
+ventas_mensuales["proyeccion"] = ventas_mensuales["ventas_totales"] + impacto_mensual
+
+# renombrar columnas para la leyenda
+ventas_mensuales = ventas_mensuales.rename(columns={
+    "ventas_totales": "Ventas 2025",
+    "proyeccion": "Proyección 2026"
+})
+
+# crear grafico
 fig = px.line(
     ventas_mensuales,
     x="mes",
-    y=["ventas_totales", "pronostico"],
-    labels={"mes": "Mes", "value": "Ventas (MXN)"},
-    title="Ventas Históricas vs Pronóstico",
-    color_discrete_map={"ventas_totales": "#0066CC", "pronostico": "#00CC66"}
+    y=["Ventas 2025", "Proyección 2026"],
+    labels={
+        "mes": "Mes",
+        "value": "Ventas (MXN)"
+    },
+    title="Ventas Históricas vs Proyección 2026 (+$22.5M MXN)",
+    color_discrete_map={
+        "Ventas 2025": "#0066CC",
+        "Proyección 2026": "#00CC66"
+    }
 )
-fig.update_layout(height=400, showlegend=True, xaxis_tickangle=-45)
+
+fig.update_layout(
+    height=400,
+    showlegend=True,
+    xaxis_tickangle=-45,
+    hovermode="x unified",
+    legend=dict(x=0, y=1)
+)
+
 st.plotly_chart(fig, use_container_width=True)
 
+# KPIs de la proyeccion
+st.markdown("---")
+col_p1, col_p2, col_p3 = st.columns(3)
+col_p1.metric("Promedio Mensual Histórico", f"${promedio_mensual:,.0f}")
+col_p2.metric("Proyección Mensual 2026", f"${promedio_mensual + impacto_mensual:,.0f}", delta=f"+${impacto_mensual:,.0f}")
+col_p3.metric("Impacto Anual Esperado", "$22.5M MXN", "10% + 2% recuperación")
 
 
 
-# Alertas de reposicion por categoria
-st.subheader("Alertas de Reposición por Categoría")
 
-# Agrupar por categoria
-df_categoria = df.groupby("category").agg({
+# alertas de reposicion curva A
+st.subheader("Alertas de Reposición - Productos Curva A (Pareto 80/20)")
+
+st.info("""
+    **Ley de Pareto Aplicada:**
+    El 20% de los productos (SKUs) generan aproximadamente el 80% de las ventas.
+    Estos productos prioritarios se clasifican como **Curva A** y reciben atención preferencial.
+    """)
+
+# calcular ventas por SKU
+df_sku = df.groupby("category").agg({
     "ventas_totales": "sum",
     "quantity": "sum",
     "invoice_no": "count"
 }).reset_index()
 
-df_categoria.columns = ["Categoría", "Ventas_Totales", "Cantidad_Vendida", "Transacciones"]
+df_sku.columns = ["Categoría", "Ventas_Totales", "Cantidad_Vendida", "Transacciones"]
 
-# Calcular prioridad - simulacion
-df_categoria["Prioridad"] = df_categoria["Ventas_Totales"].apply(
-    lambda x: "🟥 ALTA" if x > df_categoria["Ventas_Totales"].median() * 1.5 else ("🟨 MEDIA" if x > df_categoria["Ventas_Totales"].median() else "🟩 BAJA")
-)
+# calcular % acumulado para identificar curva A (80/20)
+df_sku["% Ventas"] = df_sku["Ventas_Totales"] / df_sku["Ventas_Totales"].sum() * 100
+df_sku["% Acumulado"] = df_sku["% Ventas"].cumsum()
 
-# Ordenar por ventas
-df_categoria = df_categoria.sort_values("Ventas_Totales", ascending=False)
+# clasificar por curva ABC
+def clasificar_curva(acumulado):
+    if acumulado <= 80:
+        return "🟥 CURVA A (Prioritario)"
+    elif acumulado <= 95:
+        return "🟨 CURVA B (Medio)"
+    else:
+        return "🟩 CURVA C (Bajo)"
 
-st.dataframe(
-    df_categoria,
-    use_container_width=True,
-    hide_index=True
-)
+df_sku["Clasificación"] = df_sku["% Acumulado"].apply(clasificar_curva)
+
+# ordenar por ventas descendente
+df_sku = df_sku.sort_values("Ventas_Totales", ascending=False)
+
+# mostrar solo curva A primero, eso es lo importante de todo esto
+st.markdown("### 🟥 Productos Prioritarios (Curva A - 80% de ventas)")
+curva_a = df_sku[df_sku["Clasificación"].str.contains("CURVA A")]
+if len(curva_a) > 0:
+    st.dataframe(
+        curva_a[["Categoría", "Ventas_Totales", "% Ventas", "% Acumulado", "Clasificación"]],
+        use_container_width=True,
+        hide_index=True
+    )
+else:
+    st.warning("No hay suficientes datos para identificar Curva A")
+
+# aqui muestra el resto colapsable
+with st.expander("Ver Categorías Curva B y C (20% de ventas restantes)"):
+    curva_bc = df_sku[df_sku["Clasificación"].str.contains("CURVA B|CURVA C")]
+    st.dataframe(
+        curva_bc[["Categoría", "Ventas_Totales", "% Ventas", "% Acumulado", "Clasificación"]],
+        use_container_width=True,
+        hide_index=True
+    )
+
+# KPI de pareto
+st.markdown("---")
+col_p1, col_p2 = st.columns(2)
+col_p1.metric("Categorías Curva A", f"{len(curva_a)}", "80% de las ventas")
+col_p2.metric("Categorías Curva B+C", f"{len(df_sku) - len(curva_a)}", "20% de las ventas")
 
 
-
-# Impacto economico
+# impacto economico
 st.markdown("---")
 st.subheader("Impacto Económico Estimado (Año 1)")
 
@@ -207,7 +297,7 @@ col_c.metric("ROI Proyectado", "6.5x", "$6.5 por cada $1 invertido")
 
 
 
-# Footer - Informacion de contacto
+# footer - informacion de contacto
 st.markdown("---")
 st.markdown("""
     **Prototipo MVP - Reto Analista de Datos Nyvia 2026**

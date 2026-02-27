@@ -12,11 +12,21 @@ Demuestra la viabilidad de implementar un **Motor de Pronóstico de Demanda** pa
 
 ---
 
+**Prueba el prototipo desplegado:**
+
+🔗 **[https://mvp-nyvia-by464jttb2roviv78dlljj.streamlit.app/](https://mvp-nyvia-by464jttb2roviv78dlljj.streamlit.app/)**
+
+*(Haz clic para abrir la aplicación en Streamlit Cloud)*
+
+> **Nota:** El prototipo permite cargar datos reales vía CSV. Para demostración rápida, usa la opción "Datos de demostración".
+
+---
+
 ## Propuesta de Valor
 
 | **Problema** | **Solución** | **Impacto Esperado** |
 | :--- | :--- | :--- |
-| Decisiones de compra basadas en intuición y Excel | Dashboard interactivo con pronóstico a 4 semanas | Liberar ~$12.5M MXN en capital de trabajo |
+| Decisiones de compra basadas en intuición y Excel | Dashboard interactivo con pronóstico | Liberar ~$12.5M MXN en capital de trabajo |
 | Quiebres de stock en productos clave | Alertas de reposición prioritaria | Recuperar ~$10M MXN en ventas perdidas |
 | Sin visibilidad de demanda futura | Pronóstico basado en datos históricos | **ROI proyectado: 6.5x en Año 1** |
 
@@ -24,7 +34,7 @@ Demuestra la viabilidad de implementar un **Motor de Pronóstico de Demanda** pa
 
 ## Funcionalidades del MVP
 
-- **Pronóstico de Demanda:** Proyección de ventas a 4 semanas
+- **Pronóstico de Demanda:** Proyección de ventas
 - **Alertas de Reposición:** Identificación de productos con riesgo de quiebre de stock
 - **KPIs de Impacto:** Visualización de ahorro potencial y ventas recuperadas
 - **Filtros Interactivos:** Por categoría, centro comercial y período
@@ -70,3 +80,7 @@ Demuestra la viabilidad de implementar un **Motor de Pronóstico de Demanda** pa
    ```bash
    git clone https://github.com/DavidSerranoFranco/mvp-nyvia.git
    cd nyvia-mvp-2026
+
+<p align="center">
+  <em>Desarrollado con 💙 para el Reto Nyvia 2026</em>
+</p>
